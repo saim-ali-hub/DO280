@@ -1,0 +1,36 @@
+1) Create project name p6
+
+2) Create limitranges name app_limits for project p6 with below requirement
+
+    LimitRange name: app_limits (name goes under metadata)
+    namespace: p6               (namespace info also goes under metadata)
+
+    Pod:
+       max: cpu=4 , memory=4Gi
+       min: cpu="200m",memory="256Mi"
+
+    Container:
+       max: cpu=2, memory=2Gi
+       min: cpu=100m, memory=128Mi
+       default: cpu=500m, memory=256Mi
+       defaultRequests: cpu=200m, memory=128Mi
+
+Doc Link: 
+  https://docs.redhat.com/en/documentation/openshift_container_platform/4.14/pdf/scalability_and_performance/OpenShift_Container_Platform-4.14-Scalability_and_performance-en-US.pdf
+
+Go To Chapter:
+  5.3. SETTING LIMIT RANGES
+
+  There you ll find pod and Container limitranges yaml file
+
+3)  vi limitranges and paste the content you copy from the document and modify per our requirement
+
+4) Apply
+
+5) check the status
+
+
+
+6) describe the limitranges
+
+

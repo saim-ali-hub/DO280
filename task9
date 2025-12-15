@@ -1,0 +1,31 @@
+1) create project p5
+
+2) deploy application app5 using image nginxinc/nginx-unprivileged
+
+3) Check the status of pod
+
+4) check the Allocateable memory on your node
+
+5) now set the resource requests with higher memory than what your cluster node has in Allocatable
+
+   # oc set resources deployment app5 --limits=cpu=200m,memory=40Gi --requests=cpu=100m,memory=30Gi
+
+
+6) check the pod status, if it's in pending . troubleshoot it.
+
+   Hint: you can edit the deployment 
+         Or generate new yaml file by using below command, make changes there and then apply
+
+         
+           
+           vi app5.yaml
+
+           change memory number to 1Gi under requests
+
+           save&quit
+
+           
+
+7) Now the check the pod status
+
+        

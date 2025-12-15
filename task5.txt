@@ -1,0 +1,42 @@
+Task 1:
+
+Create project p1
+
+Create a deployment myapp1 inside p1 project using nginx image
+
+
+List all the resources which deployment created
+
+
+
+List only the deployment
+
+
+List replicaset
+
+
+
+Task 2:
+
+Create another deployment inside p1 project and this app should have 2 replicas
+
+
+Validate:
+
+
+
+Task 3:
+
+Modify the myapp2 deployment and change the image version from v1 to v2
+
+
+
+Check if pods get created with latest version
+
+
+
+Task 4:
+
+If we want to create deployment yaml file and make some changes
+
+

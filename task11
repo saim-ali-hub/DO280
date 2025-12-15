@@ -1,0 +1,19 @@
+Quota:
+
+    quota is a resource management mechanism that limits the amount of resources (such as CPU, memory, storage, or the number of objects) that can be consumed by pods,replicasts and others within a project
+
+
+1) Create project p8
+
+2) create Quota name my-quota
+  
+    pods: "3"
+    cpu: 1
+    memory: 1G
+
+
+3) oc create quota --help  (get the command, modify it and create quota)
+
+4) validate quota
+
+  

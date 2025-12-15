@@ -1,0 +1,49 @@
+Scaling:
+
+Here we are going to discuss two types of Scaling:
+
+  1. Manual Scaling
+  2. Auto Scaling
+
+Task 1: Auto Scaling
+
+Create project p3
+
+
+
+Create a deployment
+
+
+
+Check the replicaset, pods and deployment status
+
+
+
+ Set pod/container resource request and resource limit to myapp7 deployment
+
+--requests=cpu=100m --limits=cpu=500m
+ 
+ Verify it by describing the deployment or pod
+
+
+
+ Now Scale up deployment pods if pod cpu usage hit more than 10%. in this case add pods between minimum 2 and maximum 10
+ So we are saying here that autoscaling can max scale upto 10 pods if needed and decreased to 2 pods.
+
+
+
+ Validate HPA (autoscaling)
+
+
+Validate numer of pods you see Now
+
+
+
+
+Now let's put some load on the pod container by sending some trafic to the application container
+
+# oc run load-generator6 --image=busybox --   sh -c "while true; do wget -q -O- http://autoscale-demo.default.svc.cluster.local; done"
+
+After Couple of minutes Check the replicaset count or pods and hpa
+
+

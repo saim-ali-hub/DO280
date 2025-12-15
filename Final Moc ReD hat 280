@@ -1,0 +1,124 @@
+EX280 FULL PRACTICAL MOCK EXAM (FINAL)
+
+Total Duration: 2 Hours 30 Minutes (150 minutes)
+Passing Score: 70%
+
+Instructions:
+- Use only oc CLI and OpenShift Web Console
+- Do NOT recreate resources unless explicitly asked
+- Names, namespaces, labels, ports must match exactly
+
+--------------------------------------------------
+Q1) Manage Identity Providers (15 minutes)
+Configure OAuth to use HTPasswd IDP
+Secret: ex280-secure
+IDP Name: ex280-idp-secure
+
+Users:
+bob / indionce
+qwerty / catalog
+john / john123
+armstrong / natasha123
+natasha / arthstrong
+harry / harry123
+susan / susuan123
+--------------------------------------------------
+Q2) Manage Cluster Projects and Permissions (15 minutes)
+Projects: apollo, test, demo
+bob: cluster-admin
+john: create projects
+qwerty: create projects
+natasha: view apollo & test
+armstrong: admin of apollo
+Delete kubeadmin
+--------------------------------------------------
+Q3) Managing Groups (10 minutes)
+Groups: site-users, guest-users
+qwerty -> guest-users
+harry,susan -> site-users
+site-users edit test
+guest-users view demo
+--------------------------------------------------
+Q4) ResourceQuota rocky (5 minutes)
+pods=3 cpu=2 services=6 memory=1Gi secrets=6 replicationcontrollers=6
+--------------------------------------------------
+Q5) LimitRange darpa (5 minutes)
+Pod memory 5Mi-300Mi, cpu 5m-300m
+Container memory min 5Mi max 300Mi request 100Mi
+Container cpu min 5m max 300m request 100m
+--------------------------------------------------
+Q6) Manual Scaling world (5 minutes)
+Scale deployment to 5 replicas
+--------------------------------------------------
+Q7) Autoscaling scaling (10 minutes)
+HPA min=2 max=9 cpu=60%
+--------------------------------------------------
+Q7A) Troubleshooting selector (10 minutes)
+Project: troubleshooting-1
+Fix deployment selector mismatch
+--------------------------------------------------
+Q7B) Troubleshooting service selector (10 minutes)
+Project: troubleshooting-2
+Fix service selector, endpoints must exist
+--------------------------------------------------
+Q7C) Troubleshooting memory (5 minutes)
+Project: troubleshooting-3
+Fix OOM / memory limits
+--------------------------------------------------
+Q8) Secret math (5 minutes)
+Secret magic
+dirlong=asdf234234=
+--------------------------------------------------
+Q9) Database & SCC (10 minutes)
+anyuid default p20
+Create mysql deployment
+Create secret db-secre
+Attach to deployment
+--------------------------------------------------
+Q10) Secure Route quart (15 minutes)
+Route htquart HTTPS
+Self-signed cert CN=quart.apps.ocp4.example.com
+--------------------------------------------------
+Q11) ServiceAccount qed (5 minutes)
+Create project1-sa
+Assign anyuid
+--------------------------------------------------
+Q12) Deployment with SCC qed (5 minutes)
+Modify app to run successfully
+--------------------------------------------------
+Q13) Helm etherpad (10 minutes)
+helm repo add redhat https://redhat-cop.github.io/helm-charts
+Install etherpad
+--------------------------------------------------
+Q14) CronJob cron-test (10 minutes)
+test-cron
+04:05 every 2 days monthly
+Image registry.io/imagename
+SA project1-sa
+--------------------------------------------------
+Q15) Project Template (10 minutes)
+LimitRange min 5Mi max 1Gi
+Default request 254Mi limit 512Mi
+--------------------------------------------------
+Q16) Operator install (5 minutes)
+File Integrity Operator
+Namespace openshift-file-integrity
+--------------------------------------------------
+Q18) Persistent Storage page (15 minutes)
+PV landing-pv RWX 1Gi nfs2
+Server 192.168.50.254:/open001
+PVC + nginx
+Route content.example.ocp4.com
+--------------------------------------------------
+Q20) NetworkPolicy (10 minutes)
+mysql-db-conn
+namespace label team=devsecops
+pod label deployment=web-mysq
+port 3306
+--------------------------------------------------
+Q21) Liveness Probe tuesday (5 minutes)
+port 8443 delay 3 timeout 10 failures 3
+--------------------------------------------------
+FINAL TASK (5 minutes)
+Create system10<clusterid>.tar.gz
+Upload using /usr/bin/script/script

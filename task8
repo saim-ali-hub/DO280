@@ -1,0 +1,11 @@
+) Create Project p4
+
+2) create deployment app4 in p4 Project
+
+3) set the resource requests and limits
+   requirement:
+
+        requests should have 1 cpu 500Mi memory
+        limits  should be 2 cpu 1Gi memory
+
+

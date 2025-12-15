@@ -1,0 +1,79 @@
+For this lab just have only one worker node, make sure your master node already have Taint at installation time. 
+(if you start cluster installation with one master and one or more worker nodes, so installer apply the taint by default on master node to prevent any application pods to get scheduled on master node)
+
+Taint Lab:
+
+What is Taint?
+
+  Node taint is used where you don't want to schedule a application pods on a specific nodes.
+  It has three Type of Taint Effects:
+
+    NoSchedule:  (This is the mostly used taint Effect)
+
+       Pods that do not tolerate the taint will not be scheduled on the node.
+    
+    NoExecute:
+
+      Pods that do not tolerate the taint will be evicted from the node if already running, and not scheduled there in the future.
+
+    PreferNoSchedule:
+
+    Kubernetes tries to avoid placing pods that don’t tolerate the taint on the node, but may still schedule them if no other options are available.
+
+
+Use two or atleast one worker node
+
+
+1) Apply the taint to the worker node
+
+   
+
+
+                                        (test is a key which has value app, NoSchedule is a Effect)
+
+
+
+Since we have only one work node for this lab so application pod will try to run on the worker node
+
+
+2) Create a new project name scheduling-lab
+ 
+3) Run pod name app3 in scheduling-lab project
+
+   
+
+4) check the status of the pod
+
+   
+
+  if might be showing State 'PENDING'
+
+5) Now check why scheduler is not able to schedule the pod
+
+   
+
+   IF you see Word Taint that means the node where scheduler is try to schedule the pod has taint applied.
+
+Solution1: (you only need this solution for DO280 Exam)
+
+
+6) find which worker node has taint if you have multiple worker nodes, describe them one by one
+
+   
+
+7) now you find that one of your worker node has taint, now let's remove the taint
+
+
+
+   (the minus sign at the end will remove the taint)
+
+  Validate that node has been untainted
+
+  
+
+
+8) Again check the status of your pod
+
+  
+
+Now pod should be in running state

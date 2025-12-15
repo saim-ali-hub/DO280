@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "This script assumes cluster-admin privileges."
+echo "Current user: $(oc whoami || echo UNKNOWN)"
+echo
+
+########################
+# Helper function
+########################
+ensure_project() {
+  local ns="$1"
+  if ! oc get ns "$ns" >/dev/null 2>&1; then
+    echo ">> Creating project: $ns"
+    oc new-project "$ns" >/dev/null 2>&1 || oc create namespace "$ns" >/dev/null 2>&1
+  else
+    echo ">> Project $ns already exists"
+  fi
+}
+
+########################
+# Base projects
+########################
+for ns in apollo test demo rocky darpa; do
+  ensure_project "$ns"
+done
+
+########################
+# world (scaling base)
+########################
+ensure_project world
+oc -n world create deployment web \
+  --image=quay.io/redhattraining/hello-world-nginx:v1.0 \
+  --replicas=1 >/dev/null 2>&1 || true
+oc -n world expose deployment web --port=8080 >/dev/null 2>&1 || true
+
+########################
+# scaling (HPA base)
+########################
+ensure_project scaling
+oc -n scaling create deployment autoscale-app \
+  --image=quay.io/redhattraining/hello-world-nginx:v1.0 >/dev/null 2>&1 || true
+oc -n scaling set resources deployment autoscale-app \
+  --requests=cpu=50m,memory=100Mi >/dev/null 2>&1 || true
+oc -n scaling expose deployment autoscale-app --port=8080 >/dev/null 2>&1 || true
+
+########################
+# math (secrets)
+########################
+ensure_project math
+
+########################
+# monday (secret consumption)
+########################
+ensure_project monday
+oc -n monday create deployment monday-app \
+  --image=quay.io/redhattraining/hello-world-nginx:v1.0 >/dev/null 2>&1 || true
+oc -n monday expose deployment monday-app --port=8080 >/dev/null 2>&1 || true
+
+########################
+# quart (TLS route)
+########################
+ensure_project quart
+oc -n quart create deployment hello \
+  --image=quay.io/redhattraining/hello-world-nginx:v1.0 >/dev/null 2>&1 || true
+oc -n quart expose deployment hello --port=8080 >/dev/null 2>&1 || true
+
+########################
+# qed (SCC / anyuid)
+########################
+ensure_project qed
+oc -n qed create deployment qed-app \
+  --image=quay.io/redhattraining/hello-world-nginx:v1.0 >/dev/null 2>&1 || true
+oc -n qed expose deployment qed-app --port=8080 >/dev/null 2>&1 || true
+oc -n qed create sa project1-sa >/dev/null 2>&1 || true
+oc -n qed set serviceaccount deployment/qed-app project1-sa >/dev/null 2>&1 || true
+oc -n qed patch deployment qed-app --type=json -p='[
+  {"op":"add","path":"/spec/template/spec/containers/0/securityContext","value":{"runAsUser":0}}
+]' >/dev/null 2>&1 || true
+oc -n qed rollout restart deployment qed-app >/dev/null 2>&1 || true
+
+########################
+# etherpad
+########################
+ensure_project etherpad
+
+########################
+# cron-test
+########################
+ensure_project cron-test
+
+########################
+# openshift-file-integrity
+########################
+ensure_project openshift-file-integrity
+
+########################
+# page (PV/PVC lab)
+########################
+ensure_project page
+
+########################
+# project-b (network policy)
+########################
+ensure_project project-b
+oc label ns project-b team=devsecops --overwrite >/dev/null 2>&1 || true
+
+########################
+# database & checker (network policy lab)
+########################
+ensure_project database
+ensure_project checker
+oc label ns database team=devsecops --overwrite >/dev/null 2>&1 || true
+oc -n database create deployment web-mysq --image=quay.io/centos/centos:7 >/dev/null 2>&1 || true
+oc -n database set labels deployment web-mysq deployment=web-mysq >/dev/null 2>&1 || true
+oc -n database patch deployment web-mysq --type=json -p='[
+ {"op":"replace","path":"/spec/template/spec/containers/0/command",
+  "value":["bash","-c","yum install -y nc && nc -lk -p 3306"]}
+]' >/dev/null 2>&1 || true
+oc -n checker run checker --image=quay.io/centos/centos:7 --restart=Never -- bash -c "sleep 3600" >/dev/null 2>&1 || true
+
+########################
+# Tuesday: LivenessProbe
+########################
+ensure_project file-integrity-project
+oc -n file-integrity-project create deployment liveness-app --image=nginx >/dev/null 2>&1 || true
+oc -n file-integrity-project set ports deployment liveness-app --container-port=80 >/dev/null 2>&1
+oc -n file-integrity-project set probe deployment liveness-app \
+  --liveness --get-url=http://:80/ \
+  --initial-delay-seconds=10 --period-seconds=10 >/dev/null 2>&1
+oc -n file-integrity-project expose deployment liveness-app --port=80 >/dev/null 2>&1 || true
+oc -n file-integrity-project expose svc liveness-app >/dev/null 2>&1 || true
+
+########################
+# TROUBLESHOOTING LABS
+########################
+
+# troubleshooting-1 (selector)
+ensure_project troubleshooting-1
+oc adm policy add-scc-to-user anyuid -z default -n troubleshooting-1 >/dev/null 2>&1 || true
+wget -q -O selector.yaml \
+ https://gitlab.com/zeeshanali.ny/ocp-labs/-/raw/main/Evaluation/selector.yaml
+oc apply -f selector.yaml -n troubleshooting-1 >/dev/null 2>&1 || true
+
+# troubleshooting-2 (service selector)
+ensure_project troubleshooting-2
+oc adm policy add-scc-to-user anyuid -z default -n troubleshooting-2 >/dev/null 2>&1 || true
+wget -q -O service-selector.yaml \
+ https://gitlab.com/zeeshanali.ny/ocp-labs/-/raw/main/Evaluation/service-selector.yaml
+oc apply -f service-selector.yaml -n troubleshooting-2 >/dev/null 2>&1 || true
+
+# troubleshooting-3 (memory / OOM)
+ensure_project troubleshooting-3
+oc adm policy add-scc-to-user anyuid -z default -n troubleshooting-3 >/dev/null 2>&1 || true
+wget -q -O memory.yaml \
+ https://gitlab.com/zeeshanali.ny/ocp-labs/-/raw/main/Evaluation/memory.yaml
+oc apply -f memory.yaml -n troubleshooting-3 >/dev/null 2>&1 || true
+
+echo
+echo "✅ EX280 FULL LAB ENVIRONMENT SETUP COMPLETE"

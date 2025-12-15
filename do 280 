@@ -1,0 +1,263 @@
+Q1) Manage Identity Providers
+
+Configure OAuth to use HTPasswd as Identity Provider
+
+Secret name: ex280-secure
+
+IDP name: ex280-idp-secure
+
+Create user bob with password indionce
+
+Create user qwerty with password catalog
+
+Create user john with password john123
+
+Create user armstrong with password natasha123
+
+Create user natasha with password arthstrong
+
+Create user harry with password harry123
+
+Create user susan with password susuan123
+
+Q2) Manage Cluster Project and Permissions
+
+Create projects: apollo, test, demo
+
+bob user: cluster-admin rights
+
+john user: can create projects
+
+qwerty user: can create projects
+
+natasha: can view only apollo and test
+
+armstrong: admin of apollo
+
+kubeadmin: should not exist (delete kubeadmin)
+
+Q3) Managing Groups
+
+Create groups: site-users, guest-users
+
+Add qwerty user to guest-users
+
+Add harry and susan users to site-users
+
+Give edit permission to site-users on test project
+
+Give view permission to guest-users on demo project
+
+Q4) Create ResourceQuota  named my-quota for project rocky
+
+pods = 3
+
+cpu = 2
+
+services = 6
+
+memory = 1Gi
+
+secrets = 6
+
+replicationcontrollers = 6
+
+Q5) Create LimitRange for project darpa
+
+Pod memory: min 5Mi, max 300Mi
+
+Container memory: min 5Mi, max 300Mi, defaultRequest 100Mi
+
+Pod CPU: min 5m, max 300m
+
+Container CPU: min 5m, max 300m, defaultRequest 100m
+
+Q6) Scale Application Manually (project world)
+
+Scale the single-pod deployment to 5 replicas
+
+All pods must run successfully
+
+Q7) Autoscale Pods in scaling project
+
+Minimum replicas = 2
+
+Maximum replicas = 9
+
+CPU percentage = 60%
+
+Container default request:
+
+memory = 100Mi
+
+cpu = 50m
+
+Q8) Create secret in project math
+
+Secret name: magic
+
+Key name: dirlong
+
+Key value: asdf234234=
+
+Q9) 
+Also run below command
+
+oc adm policy add-scc-to-user anyuid -z default -n p20
+2. Create deployment database using mysql image
+
+3. Check the status of the pod
+
+If not running check the pod log
+Create secret name db-secre
+Attach the secret to the deployment
+
+Q10) Create Secure Route in quart project
+
+App hello already running (http)
+
+Route name: htquart
+
+Must serve HTTPS using a self-signed certificate
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt
+Certificate subject:
+
+/C=US/ST=North Carolina/L=Raleigh/O=RedHat/CN=quart.apps.ocp4.example.com
+
+
+Secure URL:
+
+https://quart.apps.domain3.example.com
+
+
+Application must produce output
+
+Q11) Create ServiceAccount in qed
+
+ServiceAccount name: project1-sa
+
+Associate it with anyuid SCC
+
+Q12) Deploy application in qed
+
+One pod already running
+
+Modify pod/deployment so it runs using any user allowed by application
+
+App must start successfully
+
+Q13) Install Helm Chart etherpad
+
+Repository:
+
+helm repo add redhat https://redhat-cop.github.io/helm-charts
+
+
+Install etherpad chart
+
+Q14) Create CronJob test-cron
+
+Time: 04:05
+
+Schedule: every 2 days and every month
+
+Use image: registry.io/imagename
+
+ServiceAccount & Account name = project1-sa
+
+Successful job history limit = 14
+
+Project name = cron-test
+
+Q15) Create project template with LimitRange
+
+Minimum container memory: 5Mi
+
+Maximum container memory: 1Gi
+
+Default request memory: 254Mi
+
+Default limit memory: 512Mi
+
+Make this template the default template for all new projects
+
+Q16) Install operator file-integrity-manager
+
+Install operator: File Integrity Operator
+
+Installation plan: Automatic
+
+Install in project: openshift-file-integrity
+
+Q18) Create a PV
+
+PV name: landing-pv
+
+Size: 1Gi
+
+ReadWriteMany access mode
+
+StorageClass: nfs2
+
+Path: /open001
+
+Server: 192.168.50.254
+
+Reclaim policy: Retain
+
+Then create matching PVC in project page
+
+Deploy Nginx using:
+
+registry.nginx.example.com:8443/redhattraining/hello-world-nginx:v1.0
+
+
+Application should show output for
+
+content.example.ocp4.com
+
+Q20) Create NetworkPolicy to connect two pods
+
+One pod in database namespace
+
+One pod in checker namespace
+
+Pod in checker must access database pod
+
+NetworkPolicy name: mysql-db-conn
+
+Use namespace label: team=devsecops
+
+Use pod label: deployment=web-mysq
+
+Port: 3306/tcp
+
+Verify using checker pod logs
+
+Q21) Create a Liveness Probe in project tuesday
+
+Port: 8443
+
+Initial delay: 3 seconds
+
+Timeout: 10 seconds
+
+Must survive 3 crashes (failureThreshold=3)
+
+Q18 (last page) Collect cluster info
+
+Create tar file:
+
+system10<clusterid>.tar.gz
+
+
+Command:
+
+tar cvaf system10<clusterid>.tar.gz
+
+
+Upload using:
+
+/usr/bin/script/script system10<clusterid>.tar.gz
+
+🎉 Done!

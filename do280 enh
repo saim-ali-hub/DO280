@@ -1,0 +1,686 @@
+Q1 – Manage Identity Providers (HTPasswd)
+
+Objective: Configure OAuth to use HTPasswd as an Identity Provider.
+
+Details:
+
+Secret name: ex280-secure
+
+IDP name: ex280-idp-secure
+
+Users and passwords:
+
+bob / indionce
+
+qwerty / catalog
+
+john / john123
+
+armstrong / natasha123
+
+natasha / arthstrong
+
+harry / harry123
+
+susan / susuan123
+
+Tasks:
+
+Create an htpasswd file with all the users.
+
+Create secret ex280-secure in openshift-config from that file.
+
+Edit the cluster OAuth object to add an HTPasswd IDP:
+
+name: ex280-idp-secure
+
+type: HTPasswd
+
+fileData.name: ex280-secure
+
+Restart oauth-openshift deployment if required.
+
+Verification:
+
+oc get oauth.config.openshift.io cluster -o yaml shows the HTPasswd IDP.
+
+You can log in as bob, qwerty, etc. using oc login or the web console.
+
+Q2 – Manage Cluster Projects and Permissions
+
+Objective: Create projects and assign correct RBAC.
+
+Details:
+
+Projects: apollo, test, demo
+
+Roles:
+
+bob: cluster-admin
+
+john: can create projects
+
+qwerty: can create projects
+
+natasha: view only apollo and test
+
+armstrong: admin of apollo
+
+kubeadmin: must be removed / disabled
+
+Tasks:
+
+Create projects: apollo, test, demo.
+
+Grant bob cluster-admin:
+
+oc adm policy add-cluster-role-to-user cluster-admin bob
+
+Grant john and qwerty ability to create projects:
+
+oc adm policy add-cluster-role-to-user self-provisioner john
+
+oc adm policy add-cluster-role-to-user self-provisioner qwerty
+
+Grant natasha view on apollo and test only:
+
+oc adm policy add-role-to-user view natasha -n apollo
+
+oc adm policy add-role-to-user view natasha -n test
+
+Grant armstrong admin on apollo:
+
+oc adm policy add-role-to-user admin armstrong -n apollo
+
+Disable / delete kubeadmin:
+
+Delete kubeadmin secret: oc delete secret kubeadmin -n kube-system
+
+Optionally delete user + identity.
+
+Verification:
+
+oc get projects shows apollo, test, demo.
+
+oc describe clusterrolebinding cluster-admin shows bob.
+
+oc adm policy who-can create projectrequests includes john, qwerty.
+
+oc describe rolebinding -n apollo and -n test show natasha with view.
+
+oc describe rolebinding admin -n apollo shows armstrong.
+
+Login as other users and confirm permissions (e.g., natasha can’t modify resources).
+
+Q3 – Managing Groups
+
+Objective: Use groups and bind them to roles.
+
+Details:
+
+Groups: site-users, guest-users
+
+Membership:
+
+guest-users: qwerty
+
+site-users: harry, susan
+
+Permissions:
+
+site-users: edit on test
+
+guest-users: view on demo
+
+Tasks:
+
+Create groups:
+
+oc adm groups new site-users
+
+oc adm groups new guest-users
+
+Add users:
+
+oc adm groups add-users guest-users qwerty
+
+oc adm groups add-users site-users harry susan
+
+Bind roles:
+
+oc adm policy add-role-to-group edit site-users -n test
+
+oc adm policy add-role-to-group view guest-users -n demo
+
+Verification:
+
+oc describe group site-users shows harry, susan.
+
+oc describe group guest-users shows qwerty.
+
+oc describe rolebinding -n test shows site-users with edit.
+
+oc describe rolebinding -n demo shows guest-users with view.
+
+Q4 – ResourceQuota in rocky
+
+Objective: Limit resource usage in project rocky.
+
+Details (for rocky):
+
+pods: 3
+
+cpu: 2 (cores, e.g. 2)
+
+services: 6
+
+memory: 1Gi
+
+secrets: 6
+
+replicationcontrollers: 6
+
+Tasks:
+
+Ensure project rocky exists.
+
+Create a ResourceQuota YAML defining the above limits.
+
+Apply it in rocky.
+
+Verification:
+
+oc describe quota -n rocky shows correct limits.
+
+Attempt to exceed limits and check for failures.
+
+Q5 – LimitRange in darpa
+
+Objective: Set pod and container limits/requests.
+
+Details (project darpa):
+
+Pod memory: min 5Mi, max 300Mi
+
+Container memory: min 5Mi, max 300Mi, defaultRequest 100Mi
+
+Pod CPU: min 5m, max 300m
+
+Container CPU: min 5m, max 300m, defaultRequest 100m
+
+Tasks:
+
+Ensure project darpa exists.
+
+Create a LimitRange with appropriate type: Pod and type: Container sections.
+
+Apply in darpa.
+
+Verification:
+
+oc describe limitrange -n darpa shows all min/max/defaults.
+
+Create a pod without explicit resources and confirm defaults apply.
+
+Q6 – Scale Application Manually (world)
+
+Objective: Manually scale a deployment.
+
+Details:
+
+Project: world
+
+Single deployment already exists (e.g., web).
+
+Scale to 5 replicas, all must be running.
+
+Tasks:
+
+Switch to project world.
+
+Scale deployment:
+
+oc scale deployment web --replicas=5 -n world
+
+Wait for pods to become Running.
+
+Verification:
+
+oc get pods -n world shows 5 ready pods.
+
+oc get deploy web -n world shows READY 5/5.
+
+Q7 – Autoscale Pods (scaling)
+
+Objective: Configure Horizontal Pod Autoscaler.
+
+Details:
+
+Project: scaling
+
+Deployment present (e.g., autoscale-app)
+
+HPA:
+
+Min replicas: 2
+
+Max replicas: 9
+
+Target CPU: 60%
+
+Container default request:
+
+memory: 100Mi
+
+cpu: 50m
+
+Tasks:
+
+Set resource requests on deployment:
+
+oc set resources deploy autoscale-app --requests='cpu=50m,memory=100Mi' -n scaling
+
+Create HPA:
+
+oc autoscale deploy autoscale-app --min=2 --max=9 --cpu-percent=60 -n scaling.
+
+Verification:
+
+oc get hpa -n scaling
+
+oc describe hpa autoscale-app -n scaling shows correct min/max & target CPU.
+
+Q8 – Secret in math
+
+Objective: Create a key/value secret.
+
+Details:
+
+Project: math
+
+Secret name: magic
+
+Key: dirlong
+
+Value: asdf234234=
+
+Tasks:
+
+Switch to math.
+
+Create secret:
+
+oc create secret generic magic --from-literal=dirlong='asdf234234=' -n math.
+
+Verification:
+
+oc get secret magic -n math -o yaml
+
+oc get secret magic -n math -o jsonpath='{.data.dirlong}' | base64 -d.
+
+Q9 – Use Secret in monday
+
+Objective: Make an existing pod consume magic secret.
+
+Details:
+
+Project: monday
+
+A pod/deployment already exists.
+
+Secret magic originally in math → must be usable in monday.
+
+Tasks:
+
+Copy or recreate magic in monday namespace.
+
+Attach secret to deployment in monday:
+
+As env vars: oc set env deploy/<name> --from=secret/magic -n monday
+
+Or as volume: oc set volume deploy/<name> --add --name=magic-vol --type=secret --secret-name=magic --mount-path=/etc/magic.
+
+Ensure pods restart and come up Running.
+
+Verification:
+
+oc get pods -n monday shows app Running.
+
+oc exec into pod and check env or /etc/magic/dirlong.
+
+Q10 – Secure Route in quart
+
+Objective: Expose app over HTTPS with self-signed cert.
+
+Details:
+
+Project: quart
+
+App hello already running (HTTP).
+
+Route name: htquart
+
+Cert subject:
+/C=US/ST=North Carolina/L=Raleigh/O=RedHat/CN=quart.apps.ocp4.example.com
+
+Secure URL: https://quart.apps.domain3.example.com
+
+App must respond.
+
+Tasks:
+
+Create a self-signed cert/key with that subject.
+
+Create a secure Route:
+
+Name: htquart
+
+TLS: reencrypt or edge (per requirements).
+
+Use provided cert/key.
+
+Map host: quart.apps.domain3.example.com.
+
+Verification:
+
+oc get route -n quart
+
+curl -k https://quart.apps.domain3.example.com returns app output.
+
+Q11 – ServiceAccount in qed
+
+Objective: Create SA with anyuid SCC.
+
+Details:
+
+Project: qed
+
+ServiceAccount: project1-sa
+
+Associate with anyuid SCC.
+
+Tasks:
+
+oc create sa project1-sa -n qed
+
+Add SA to anyuid SCC:
+
+oc adm policy add-scc-to-user anyuid -z project1-sa -n qed
+
+Verification:
+
+oc describe sa project1-sa -n qed
+
+oc describe scc anyuid shows system:serviceaccount:qed:project1-sa.
+
+Q12 – Deploy application in qed with SA
+
+Objective: Make app run as any user allowed by app, using project1-sa.
+
+Details:
+
+Project: qed
+
+One pod/deployment already exists.
+
+Tasks:
+
+Patch deployment and set:
+
+spec.template.spec.serviceAccountName: project1-sa
+
+Ensure the container doesn’t rely on fixed UID mismatched to SCC.
+
+Rollout restart.
+
+Verification:
+
+oc get pods -n qed shows pods Running.
+
+oc describe pod shows SA is project1-sa.
+
+Q13 – Install Helm Chart etherpad
+
+Objective: Use Helm to install etherpad.
+
+Details:
+
+Repo: http://helm.ocp4.example.com/charts
+
+Chart: etherpad
+
+Project: (you can choose, e.g., etherpad).
+
+Tasks:
+
+helm repo add training http://helm.ocp4.example.com/charts
+
+helm repo update
+
+helm install etherpad training/etherpad -n etherpad (adjust names as needed).
+
+Verification:
+
+helm list -n etherpad
+
+oc get pods -n etherpad shows etherpad pods running.
+
+Q14 – CronJob test-cron in cron-test
+
+Objective: Scheduled job with SA.
+
+Details:
+
+Project: cron-test
+
+CronJob name: test-cron
+
+Time: 04:05
+
+Schedule: every 2 days, every month → 5 4 2-31/2 * *
+
+Image: registry.io/imagename
+
+SA: project1-sa
+
+successfulJobsHistoryLimit: 14
+
+Tasks:
+
+Ensure SA project1-sa exists in cron-test.
+
+Create CronJob YAML with schedule 5 4 2-31/2 * * and SA.
+
+Apply it.
+
+Verification:
+
+oc get cronjob -n cron-test
+
+oc describe cronjob test-cron -n cron-test.
+
+Q15 – Project Template with LimitRange (default)
+
+Objective: Apply default LimitRange via project template.
+
+Details:
+
+LimitRange for new projects:
+
+Container memory:
+
+min: 5Mi
+
+max: 1Gi
+
+defaultRequest: 254Mi
+
+defaultLimit: 512Mi
+
+Make this template the default for all new projects.
+
+Tasks:
+
+Create a Template containing:
+
+A LimitRange with the above memory settings.
+
+Configure project.config.openshift.io to use this template as projectRequestTemplate.
+
+Verification:
+
+oc get project.config.openshift.io cluster -o yaml shows template ref.
+
+New project gets that LimitRange automatically.
+
+Q16 – Install Operator: File Integrity Operator
+
+Objective: Install file-integrity-manager.
+
+Details:
+
+Operator: File Integrity Operator
+
+Install plan: Automatic
+
+Namespace: openshift-file-integrity
+
+Tasks:
+
+In OperatorHub, search File Integrity Operator.
+
+Install it:
+
+Target namespace: openshift-file-integrity
+
+Approval: Automatic
+
+Verification:
+
+oc get pods -n openshift-file-integrity
+
+Operator CSV in Succeeded phase.
+
+Q18 – PV / PVC and Nginx App
+
+Objective: Create NFS-based PV/PVC and use with app.
+
+Details:
+
+PV:
+
+Name: landing-pv
+
+Size: 1Gi
+
+AccessMode: ReadOnlyMany
+
+StorageClass: nfs2
+
+Path: /open001
+
+Server: 192.168.50.254
+
+ReclaimPolicy: Retain
+
+PVC: in project page
+
+Nginx app image:
+registry.nginx.example.com:8443/redhattraining/hello-world-nginx:v1.0
+
+Hostname: content.example.ocp4.com.
+
+Tasks:
+
+Create PV YAML as above.
+
+Create PVC in page referencing nfs2, 1Gi, ReadOnlyMany.
+
+Deploy Nginx using that PVC as volume.
+
+Expose route with host content.example.ocp4.com.
+
+Verification:
+
+oc get pv, oc get pvc -n page bound.
+
+curl http://content.example.ocp4.com shows app output.
+
+Q20 – NetworkPolicy: connect checker → database
+
+Objective: Restrict DB access so only one namespace / pod can connect.
+
+Details:
+
+Namespaces: database, checker
+
+NetworkPolicy name: mysql-db-conn
+
+Namespace label: team=devsecops
+
+Pod label: deployment=web-mysq (in database)
+
+Port: 3306/tcp
+
+Only pods in namespace with team=devsecops (and matching pods) can access.
+
+Tasks:
+
+Label database namespace:
+oc label ns database team=devsecops
+
+Ensure DB pod in database has label deployment=web-mysq.
+
+Create NetworkPolicy in database allowing ingress to pods with:
+
+podSelector: deployment=web-mysq
+
+From:
+
+namespaceSelector: team=devsecops
+
+Port 3306/TCP.
+
+Ensure checker namespace is labeled team=devsecops.
+
+Verification:
+
+From checker pod, attempt to connect to DB on 3306 (e.g. nc or mysql client).
+
+Check logs of checker pod or commands succeed.
+
+Other namespaces cannot connect.
+
+Q21 – Liveness Probe in tuesday
+
+Objective: Add a robust liveness probe.
+
+Details:
+
+Project: tuesday
+
+Liveness probe:
+
+Port: 8443
+
+initialDelaySeconds: 3
+
+timeoutSeconds: 10
+
+failureThreshold: 3
+
+Tasks:
+
+Patch existing deployment in tuesday to add livenessProbe on container:
+
+tcpSocket or httpGet on port 8443.
+
+Set initialDelaySeconds, timeoutSeconds, failureThreshold as above.
+
+Rollout restart.
+
+Verification:
+
+oc describe pod shows liveness probe configured.
+
+App survives restarts; if it hangs, kubelet restarts the container up to the threshold.

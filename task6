@@ -1,0 +1,25 @@
+Scaling:
+
+Here we are going to discuss two types of Scaling:
+
+  1. Manual Scaling
+  2. Auto Scaling
+
+Task 1: Manual Scaling
+
+Create project p2
+
+
+
+Create a deployment with 2 replicas
+
+
+Check the replicaset, pods and deployment status
+
+ 
+ Now Scale up to 4 deployment pods Manually
+
+
+
+Validate numer of pods you see Now
+
